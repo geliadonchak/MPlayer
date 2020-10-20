@@ -47,7 +47,7 @@
                                 <Label fx:id="time" text="mm:ss" wrapText="true" HBox.hgrow="NEVER" />
                             </children>
                         </HBox>
-                        <JFXSlider fx:id="slider1" git="1.0" value="-1.0" VBox.vgrow="NEVER">
+                        <JFXSlider fx:id="slider1" max="1.0" value="-1.0" VBox.vgrow="NEVER">
                      <VBox.margin>
                         <Insets top="10.0" />
                      </VBox.margin></JFXSlider>

@@ -1,40 +1,33 @@
 package MPlayer;
 
+import javafx.collections.MapChangeListener;
 import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.util.Duration;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class Song {
     private String title;
     private String artist;
-    private final Duration duration;
+    private Duration duration;
     private final Media media;
-    private boolean currentlyPlaying;
+    private final MediaPlayer mediaPlayer;
 
     public Song(File file) {
-        this.media = new Media(file.toURI().toString());
-        duration = this.media.getDuration();
-
-        media.getMetadata().forEach((key, value) -> {
-            if (key.equals("artist")) {
-                artist = (String) value;
-            } else if (key.equals("title")) {
-                title = (String) value;
+        media = new Media(file.toURI().toString());
+        media.getMetadata().addListener((MapChangeListener<String, Object>) change -> {
+            if (change.getKey().equals("artist")) {
+                artist = (String) change.getValueAdded();
+            } else if (change.getKey().equals("title")) {
+                title = (String) change.getValueAdded();
             }
         });
-
-        System.out.println(title);
-        System.out.println(artist);
-        System.out.println(getDuration());
-
-        currentlyPlaying = false;
+        this.mediaPlayer = new MediaPlayer(media);
     }
 
-    public Media getMedia() {
-        return media;
+    public MediaPlayer getMediaPlayer() {
+        return mediaPlayer;
     }
 
     public String getTitle() {
@@ -46,14 +39,16 @@ public class Song {
     }
 
     public String getDuration() {
-        return Math.floor(duration.toMinutes()) + ":" + Math.floor(duration.toSeconds());
+        int minutes = (int) Math.floor(duration.toMinutes());
+        int seconds = (int) Math.floor(duration.toSeconds()) - minutes * 60;
+        return minutes + ":" + seconds;
     }
 
-    public boolean isCurrentlyPlaying() {
-        return currentlyPlaying;
+    public void setDuration(Duration duration) {
+        this.duration = duration;
     }
 
-    public void setCurrentlyPlaying(boolean currentlyPlaying) {
-        this.currentlyPlaying = currentlyPlaying;
+    public Media getMedia() {
+        return media;
     }
 }

@@ -6,25 +6,33 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.util.HashSet;
+import java.util.ArrayList;
 
 public class MPlayer extends Application {
 
     private MediaPlayer mediaPlayer;
     private Stage stage;
+    private int currentlyPlaying = 0;
 
-    private HashSet<Song> playlist;
+    private ArrayList<Song> playlist;
 
     public MPlayer() {
-        playlist = new HashSet<>();
+        playlist = new ArrayList<>();
     }
 
+    @FXML
+    public Label title_song;
+    @FXML
+    public Label artist;
+    @FXML
+    public Label time;
     @FXML
     public JFXButton play;
 
@@ -46,7 +54,7 @@ public class MPlayer extends Application {
             return;
         }
 
-        for (File file: files) {
+        for (File file : files) {
             Song song = new Song(file);
             if (!playlist.contains(song)) {
                 playlist.add(song);
@@ -55,7 +63,8 @@ public class MPlayer extends Application {
 
         if (mediaPlayer == null) {
             try {
-                mediaPlayer = new MediaPlayer(playlist.iterator().next().getMedia());
+                currentlyPlaying = 0;
+                setSong(playlist.get(currentlyPlaying));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -64,8 +73,18 @@ public class MPlayer extends Application {
         redrawPlaylist();
     }
 
+    private void setSong(Song song) {
+        mediaPlayer = song.getMediaPlayer();
+        mediaPlayer.setOnReady(() -> {
+            song.setDuration(song.getMedia().getDuration());
+            title_song.setText(song.getTitle());
+            artist.setText(song.getArtist());
+            time.setText(song.getDuration());
+        });
+    }
+
     private void redrawPlaylist() {
-        for (Song song: playlist) {
+        for (Song song : playlist) {
 
         }
     }
