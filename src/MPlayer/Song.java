@@ -23,6 +23,7 @@ public class Song {
                 title = (String) change.getValueAdded();
             }
         });
+
         this.mediaPlayer = new MediaPlayer(media);
     }
 
