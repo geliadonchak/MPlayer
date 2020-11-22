@@ -1,102 +1,98 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.jfoenix.controls.JFXButton?>
-<?import com.jfoenix.controls.JFXSlider?>
-<?import com.jfoenix.controls.JFXToggleNode?>
-<?import com.jfoenix.controls.JFXToolbar?>
-<?import com.jfoenix.controls.JFXTreeTableView?>
+<?import com.jfoenix.controls.*?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TreeTableColumn?>
+<?import javafx.scene.control.*?>
 <?import javafx.scene.effect.Bloom?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Pane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
-
-<BorderPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="450.0" prefWidth="950.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="MPlayer.MPlayer">
+<BorderPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="450.0" prefWidth="950.0"
+            xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="MPlayer.MPlayer">
     <bottom>
         <HBox alignment="CENTER_LEFT" prefHeight="80.0" prefWidth="600.0" spacing="4.0" BorderPane.alignment="CENTER">
-            <children>
-                <ImageView fx:id="imageView" fitHeight="80.0" fitWidth="1.0" pickOnBounds="true" preserveRatio="true" HBox.hgrow="NEVER" />
-                <HBox fx:id="layout" alignment="CENTER" prefHeight="81.0" prefWidth="163.0" spacing="4.0" HBox.hgrow="NEVER">
-                    <children>
-                        <JFXButton fx:id="previous" alignment="CENTER" buttonType="RAISED" contentDisplay="CENTER" maxHeight="40.0" maxWidth="40.0" minHeight="40.0" minWidth="40.0" prefHeight="40.0" prefWidth="40.0" style="-fx-background-color: #545454; -fx-background-radius: 50%;" text="&lt;&lt;" textFill="WHITE" />
-                        <JFXButton fx:id="play" alignment="CENTER" buttonType="RAISED" contentDisplay="CENTER" maxHeight="48.0" maxWidth="48.0" minHeight="48.0" minWidth="48.0" onMouseClicked="#playClicked" prefHeight="48.0" prefWidth="48.0" style="-fx-background-color: #545454; -fx-background-radius: 50%; -fx-font-size: 18;" text="▶" textFill="WHITE" />
-                        <JFXButton fx:id="next" alignment="CENTER" buttonType="RAISED" contentDisplay="CENTER" maxHeight="40.0" maxWidth="40.0" minHeight="40.0" minWidth="40.0" prefHeight="40.0" prefWidth="40.0" style="-fx-background-color: #545454; -fx-background-radius: 50%;" text="&gt;&gt;" textFill="WHITE" />
-                    </children>
+            <ImageView fitHeight="80.0" fitWidth="1.0" pickOnBounds="true" preserveRatio="true" HBox.hgrow="NEVER"/>
+            <HBox alignment="CENTER" prefHeight="81.0" prefWidth="163.0" spacing="4.0" HBox.hgrow="NEVER">
+                <JFXButton fx:id="prev" alignment="CENTER" buttonType="RAISED" contentDisplay="CENTER"
+                           maxHeight="40.0" maxWidth="40.0" minHeight="40.0" minWidth="40.0" prefHeight="40.0"
+                           prefWidth="40.0" style="-fx-background-color: #545454; -fx-background-radius: 50%;"
+                           textFill="WHITE"/>
+                <JFXButton fx:id="play" alignment="CENTER" buttonType="RAISED" contentDisplay="CENTER"
+                           maxHeight="48.0" maxWidth="48.0" minHeight="48.0" minWidth="48.0" prefHeight="48.0"
+                           prefWidth="48.0"
+                           style="-fx-background-color: #545454; -fx-background-radius: 50%; -fx-font-size: 18;"
+                           textFill="WHITE"/>
+                <JFXButton fx:id="next" alignment="CENTER" buttonType="RAISED" contentDisplay="CENTER"
+                           maxHeight="40.0" maxWidth="40.0" minHeight="40.0" minWidth="40.0" prefHeight="40.0"
+                           prefWidth="40.0" style="-fx-background-color: #545454; -fx-background-radius: 50%;"/>
+            </HBox>
+            <VBox alignment="CENTER" prefHeight="80.0" prefWidth="598.0" HBox.hgrow="SOMETIMES">
+                <padding>
+                    <Insets left="10.0" right="10.0"/>
+                </padding>
+                <HBox>
+                    <Label fx:id="songTitle" text="title" wrapText="true">
+                        <font>
+                            <Font name="System Bold" size="12.0"/>
+                        </font>
+                    </Label>
+                    <Label text=" - "/>
+                    <Label fx:id="artist" text="artist" wrapText="true" HBox.hgrow="NEVER">
+                        <effect>
+                            <Bloom/>
+                        </effect>
+                    </Label>
+                    <Pane HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="time" text="mm:ss" wrapText="true" HBox.hgrow="NEVER"/>
                 </HBox>
-                <VBox alignment="CENTER" prefHeight="80.0" prefWidth="598.0" HBox.hgrow="SOMETIMES">
-                    <children>
-                        <HBox>
-                            <children>
-                                <Label fx:id="title_song" text="title" wrapText="true">
-                                    <font>
-                                        <Font name="System Bold" size="12.0" />
-                                    </font>
-                                </Label>
-                                <Label text=" - " />
-                                <Label fx:id="artist" text="artist" wrapText="true" HBox.hgrow="NEVER">
-                                    <effect>
-                                        <Bloom />
-                                    </effect>
-                                </Label>
-                                <Pane HBox.hgrow="ALWAYS" />
-                                <Label fx:id="time" text="mm:ss" wrapText="true" HBox.hgrow="NEVER" />
-                            </children>
-                        </HBox>
-                        <JFXSlider fx:id="sliderDuration" max="1.0" value="-1.0" VBox.vgrow="NEVER">
-                            <VBox.margin>
-                                <Insets top="10.0" />
-                            </VBox.margin></JFXSlider>
-                    </children>
-                    <padding>
-                        <Insets left="10.0" right="10.0" />
-                    </padding>
-                </VBox>
-            </children>
+                <JFXSlider fx:id="sliderDuration" max="1.0" value="-1.0" VBox.vgrow="NEVER">
+                    <VBox.margin>
+                        <Insets top="10.0"/>
+                    </VBox.margin>
+                </JFXSlider>
+            </VBox>
         </HBox>
     </bottom>
     <left>
-        <JFXToolbar minHeight="-Infinity" minWidth="60.0" prefHeight="373.0" prefWidth="98.0" style="-fx-background-color: #545454;" BorderPane.alignment="CENTER">
+        <JFXToolbar minHeight="-Infinity" minWidth="60.0" prefHeight="373.0" prefWidth="98.0"
+                    style="-fx-background-color: #545454;" BorderPane.alignment="CENTER">
             <center>
-                <VBox alignment="CENTER" prefHeight="463.0" prefWidth="98.0" spacing="12.0" BorderPane.alignment="CENTER">
-                    <children>
-                        <JFXToggleNode fx:id="media" maxHeight="48.0" maxWidth="48.0" minHeight="48.0" minWidth="48.0" onMouseClicked="#addMedia" style="-fx-background-radius: 50%;" textAlignment="CENTER">
-                            <graphic>
-                                <JFXButton maxHeight="50.0" maxWidth="100.0" minHeight="50.0" minWidth="100.0" prefHeight="50.0" prefWidth="100.0" style="-fx-background-radius: 50%;" text="Media" textAlignment="CENTER" textFill="WHITE" textOverrun="CLIP" />
-                            </graphic>
-                        </JFXToggleNode>
-                        <JFXToggleNode fx:id="statistics" maxHeight="48.0" maxWidth="48.0" minHeight="48.0" minWidth="48.0" style="-fx-background-radius: 50%;" />
-                        <JFXSlider fx:id="sliderVolume" blockIncrement="0.0" min ="0.0" max="100.0" orientation="VERTICAL" prefHeight="83.0" prefWidth="14.0" value="100.0" />
-                    </children>
+                <VBox alignment="CENTER" prefHeight="463.0" prefWidth="98.0" spacing="12.0"
+                      BorderPane.alignment="CENTER">
+                    <JFXToggleNode fx:id="mediaSelect" maxHeight="48.0" maxWidth="48.0" minHeight="48.0" minWidth="48.0"
+                                   style="-fx-background-radius: 50%;" textAlignment="CENTER">
+                        <JFXButton fx:id="mediaSelectButton" maxHeight="50.0" maxWidth="100.0" minHeight="50.0" minWidth="100.0"
+                                   prefHeight="50.0" prefWidth="100.0" textFill="WHITE"/>
+                    </JFXToggleNode>
+                    <JFXToggleNode fx:id="mediaDelete" maxHeight="48.0" maxWidth="48.0" minHeight="48.0" minWidth="48.0"
+                                   style="-fx-background-radius: 50%;">
+                        <JFXButton fx:id="mediaDeleteButton" maxHeight="50.0" maxWidth="100.0" minHeight="50.0" minWidth="100.0"
+                                   prefHeight="50.0" prefWidth="100.0" style="-fx-background-radius: 50%;" textFill="WHITE"/>
+                    </JFXToggleNode>
+                    <JFXSlider fx:id="sliderVolume" blockIncrement="0.0" orientation="VERTICAL"
+                               prefHeight="83.0" prefWidth="14.0" value="100.0"/>
                 </VBox>
             </center>
         </JFXToolbar>
     </left>
     <center>
         <VBox BorderPane.alignment="CENTER">
-            <children>
-                <JFXToolbar prefHeight="40.0" style="-fx-background-color: #545454;">
-                    <left>
-                        <Label fx:id="title" text="Playlist" textFill="WHITE" BorderPane.alignment="CENTER">
-                            <padding>
-                                <Insets bottom="6.0" left="6.0" right="6.0" top="6.0" />
-                            </padding>
-                        </Label>
-                    </left>
-                </JFXToolbar>
-                <JFXTreeTableView>
-                    <columns>
-                        <TreeTableColumn minWidth="75.0" prefWidth="75.0" text="№" />
-                        <TreeTableColumn minWidth="390.0" prefWidth="390.0" text="Title" />
-                        <TreeTableColumn minWidth="300.0" prefWidth="300.0" text="Artist" />
-                        <TreeTableColumn minWidth="85.0" prefWidth="85.0" text="Duration" />
-                    </columns>
-                </JFXTreeTableView>
-            </children>
+            <JFXToolbar prefHeight="40.0" style="-fx-background-color: #545454;">
+                <left>
+                    <Label text="Playlist" textFill="WHITE" BorderPane.alignment="CENTER">
+                        <padding>
+                            <Insets bottom="6.0" left="6.0" right="6.0" top="6.0"/>
+                        </padding>
+                    </Label>
+                </left>
+            </JFXToolbar>
+            <TableView fx:id="playlist" prefWidth="647.0">
+                <columns>
+                    <TableColumn style="-fx-alignment: CENTER;" fx:id="indexColumn" prefWidth="40.0" text="№"/>
+                    <TableColumn fx:id="titleColumn" prefWidth="450.0" text="Title"/>
+                    <TableColumn fx:id="artistColumn" prefWidth="360.0" text="Artist"/>
+                </columns>
+            </TableView>
         </VBox>
     </center>
 </BorderPane>

@@ -2,178 +2,288 @@ package MPlayer;
 
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXSlider;
+import com.jfoenix.controls.JFXToggleNode;
 import javafx.application.Application;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.Window;
+import javafx.util.Callback;
 import javafx.util.Duration;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 public class MPlayer extends Application {
-    public final String pauseStyle = "-fx-background-color: #545454; -fx-background-radius: 50%; -fx-font-size: 15;";
-    public final String pauseIcon = "❚❚";
-    public final String playStyle = "-fx-background-color: #545454; -fx-background-radius: 50%; -fx-font-size: 18;";
-    public final String playIcon = "▶";
+    @FXML
+    private Label songTitle;
 
-    private MediaPlayer mediaPlayer;
-    private Stage stage;
-    private int currentlyPlaying = 0;
+    @FXML
+    private Label artist;
 
-    private final ArrayList<Song> playlist;
+    @FXML
+    private JFXButton play;
 
-    public MPlayer() {
-        playlist = new ArrayList<>();
+    @FXML
+    private JFXButton next;
+
+    @FXML
+    private JFXButton prev;
+
+    @FXML
+    private Label time;
+
+    @FXML
+    private JFXSlider sliderDuration;
+
+    @FXML
+    private JFXSlider sliderVolume;
+
+    @FXML
+    private TableView<Song> playlist;
+
+    @FXML
+    private JFXToggleNode mediaSelect;
+
+    @FXML
+    private JFXButton mediaSelectButton;
+
+    @FXML
+    private JFXToggleNode mediaDelete;
+
+    @FXML
+    private JFXButton mediaDeleteButton;
+
+    @FXML
+    private TableColumn<Song, Integer> indexColumn;
+
+    @FXML
+    private TableColumn<Song, String> titleColumn;
+
+    @FXML
+    private TableColumn<Song, String> artistColumn;
+
+    private MediaPlayer mediaPlayer = null;
+    private int index = -1;
+
+    @FXML
+    void initialize() {
+        indexColumn.setCellValueFactory(new PropertyValueFactory<>("index"));
+        titleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
+        artistColumn.setCellValueFactory(new PropertyValueFactory<>("artist"));
+
+        this.setImageOnButton(mediaDeleteButton, "remove.png", 40);
+        this.setImageOnButton(mediaSelectButton, "add.png", 40);
+        this.setImageOnButton(prev, "prev.png", 20);
+        this.setImageOnButton(next, "next.png", 20);
+        this.setImageOnButton(play, "play.png", 35);
+
+        playlist.setOnKeyPressed(keyEvent -> {
+            Song selectedItem = playlist.getSelectionModel().getSelectedItem();
+
+            if (selectedItem == null) {
+                return;
+            }
+
+            if (keyEvent.getCode().equals(KeyCode.DELETE)) {
+                playlist.getItems().remove(selectedItem);
+                rewindClick(1);
+            }
+        });
+
+        mediaDelete.setOnAction(actionEvent -> {
+            playlist.getItems().clear();
+            mediaPlayer = null;
+            index = -1;
+            mediaDelete.setSelected(false);
+        });
+
+        mediaSelect.setOnAction(actionEvent -> {
+            mediaSelectClick();
+            mediaSelect.setSelected(false);
+            songTitle.requestFocus();
+        });
+
+        sliderDuration.valueProperty().addListener(durationListener);
+        sliderVolume.valueProperty().addListener(volumeListener);
+
+        TableView.TableViewSelectionModel<Song> selectionModel = playlist.getSelectionModel();
+        selectionModel.selectedItemProperty().addListener(tableChangeListener);
+
+        play.setOnAction(actionEvent -> playButtonClick());
+        next.setOnAction(actionEvent -> rewindClick(1));
+        prev.setOnAction(actionEvent -> rewindClick(-1));
     }
 
-    @FXML
-    public Label title_song;
-    @FXML
-    public Label artist;
-    @FXML
-    public Label time;
-    @FXML
-    public JFXButton play;
-    @FXML
-    public JFXSlider sliderDuration;
-    @FXML
-    public JFXSlider sliderVolume;
+    static class StyleRowFactory<T> implements Callback<TableView<T>, TableRow<T>> {
+        @Override
+        public TableRow<T> call(TableView<T> tableView) {
+            return new TableRow<>() {
+                @Override
+                protected void updateItem(T paramT, boolean b) {
+                    super.updateItem(paramT, b);
+                }
+            };
+        }
+    }
 
-    public void playClicked(MouseEvent mouseEvent) {
-        if (mediaPlayer != null) {
-            if (mediaPlayer.getStatus() == MediaPlayer.Status.READY || mediaPlayer.getStatus() == MediaPlayer.Status.PAUSED) {
-                play.setText(pauseIcon);
-                play.setStyle(pauseStyle);
-                mediaPlayer.play();
+    ChangeListener<Duration> currentTimeListener = new ChangeListener<>() {
+        @Override
+        public void changed(ObservableValue<? extends Duration> observableValue, Duration duration, Duration t) {
+            if (mediaPlayer == null) {
+                return;
+            }
 
-                mediaPlayer.setOnEndOfMedia(() -> {
-                    play.setText(playIcon);
-                    play.setStyle(playStyle);
-                    mediaPlayer.stop();
-                    sliderDuration.setValue(0);
-                });
+            sliderDuration.setValue(mediaPlayer.getCurrentTime().toSeconds());
+            changeCurrentTime();
+        }
+    };
 
-                new Thread(() -> {
-                    if (this.mediaPlayer.getStatus() != MediaPlayer.Status.PLAYING) {
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
+    ChangeListener<Song> tableChangeListener = (val, oldSong, newSong) -> {
+        if (newSong != null) {
+            setCurrentSong(newSong);
+            index = newSong.getIndex() - 1;
+            songTitle.setText(newSong.getTitle());
+        }
+    };
 
-                    while (this.mediaPlayer.getStatus() == MediaPlayer.Status.PLAYING) {
-                        if (!this.sliderDuration.valueChangingProperty().getValue()) {
-                            double allTime = mediaPlayer.getMedia().getDuration().toSeconds();
-                            sliderDuration.setValue(mediaPlayer.getCurrentTime().toSeconds() * 100.0 / allTime);
-                        }
-
-                        try {
-                            Thread.sleep(50);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                }).start();
-            } else {
-                play.setText(playIcon);
-                play.setStyle(playStyle);
-                mediaPlayer.pause();
+    InvalidationListener durationListener = new InvalidationListener() {
+        @Override
+        public void invalidated(Observable observable) {
+            if (sliderDuration.isPressed() && mediaPlayer != null) {
+                mediaPlayer.seek(Duration.seconds(sliderDuration.getValue()));
             }
         }
+    };
 
+    InvalidationListener volumeListener = new InvalidationListener() {
+        @Override
+        public void invalidated(Observable observable) {
+            if (mediaPlayer != null) {
+                mediaPlayer.setVolume(sliderVolume.getValue() / 100);
+            }
+        }
+    };
+
+    void rewindClick(int direction) {
+        if (playlist.getItems().isEmpty() && this.mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer = null;
+            index = -1;
+            artist.setText("artist");
+            time.setText("mm:ss");
+            songTitle.setText("title");
+            sliderDuration.setValue(0);
+            this.setImageOnButton(play, "play.png", 35);
+        }
+
+        if (index == -1) {
+            return;
+        }
+
+        index = (index + direction) % playlist.getItems().size();
+        if (index < 0) {
+            index = playlist.getItems().size() - 1;
+        }
+
+        playlist.getSelectionModel().select(index);
+        playlist.getFocusModel().focus(index);
     }
 
-    public void addMedia(MouseEvent mouseEvent) {
+    void setCurrentSong(Song song) {
+        if (song == null) {
+            return;
+        }
+
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+        }
+
+        mediaPlayer = song.getMediaPlayer();
+        mediaPlayer.play();
+        this.setImageOnButton(play, "pause.png", 20);
+        sliderDuration.setMin(0);
+        sliderDuration.setMax(mediaPlayer.getMedia().getDuration().toSeconds());
+        sliderDuration.setValue(0);
+        songTitle.setText(song.getTitle());
+        artist.setText(song.getArtist());
+        mediaPlayer.setVolume(sliderVolume.getValue() / 100);
+
+        mediaPlayer.currentTimeProperty().addListener(currentTimeListener);
+        playlist.setRowFactory(new StyleRowFactory<>());
+        playlist.refresh();
+    }
+
+    void changeCurrentTime() {
+        int sec = ((int) mediaPlayer.getCurrentTime().toSeconds()) % 60;
+        time.setText((int) mediaPlayer.getCurrentTime().toMinutes() + (sec < 10 ? ":0" : ":") + sec);
+    }
+
+    void playButtonClick() {
+        if (mediaPlayer == null) {
+            return;
+        }
+
+        var status = mediaPlayer.getStatus();
+        if (status == MediaPlayer.Status.PAUSED) {
+            mediaPlayer.play();
+            this.setImageOnButton(play, "pause.png", 20);
+        } else {
+            mediaPlayer.pause();
+            this.setImageOnButton(play, "play.png", 35);
+        }
+    }
+
+    void mediaSelectClick() {
+        Window window = mediaSelect.getParent().getScene().getWindow();
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("Audio Files", "*.wav", "*.mp3", "*.aac")
         );
 
-        List<File> files = fileChooser.showOpenMultipleDialog(stage);
+        List<File> files = fileChooser.showOpenMultipleDialog(window);
 
         if (files == null) {
             return;
         }
 
         for (File file : files) {
-            Song song = new Song(file);
-            if (!playlist.contains(song)) {
-                playlist.add(song);
-            }
+            Song song = new Song(playlist.getItems().size() + 1, file);
+            playlist.getItems().add(song);
         }
-
-        if (mediaPlayer == null) {
-            try {
-                currentlyPlaying = 0;
-                setSong(playlist.get(currentlyPlaying));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-//        redrawPlaylist();
     }
-
-//    private void redrawPlaylist() {
-//        for (Song song: playlist) {
-//            song.getMediaPlayer().setOnReady(() -> {
-//                song.setDuration(song.getMedia().getDuration());
-//            });
-//        }
-//    }
-
-    private void setSong(Song song) {
-        sliderDuration.minProperty().setValue(0.0);
-        sliderDuration.maxProperty().setValue(100.0);
-
-        mediaPlayer = song.getMediaPlayer();
-        mediaPlayer.setOnReady(() -> {
-            song.setDuration(song.getMedia().getDuration());
-            title_song.setText(song.getTitle());
-            artist.setText(song.getArtist());
-            time.setText(song.getDuration());
-            sliderDuration.setValue(0.0);
-        });
-
-        mediaPlayer.setVolume(sliderVolume.getValue() / 100);
-
-        mediaPlayer.setOnEndOfMedia(() -> {
-            mediaPlayer.stop();
-        });
-
-        sliderDuration.setOnMouseReleased((event) -> {
-            double allTime = mediaPlayer.getMedia().getDuration().toSeconds();
-            double newSongTime = sliderDuration.getValue() * allTime / 100;
-
-            Duration duration = new Duration(newSongTime * 1000);
-            mediaPlayer.seek(duration);
-        });
-
-        sliderVolume.valueProperty().addListener((observable, oldValue, newValue) -> {
-            mediaPlayer.setVolume(newValue.doubleValue() / 100.0);
-        });
+    
+    private void setImageOnButton(JFXButton node, String icon, int fitHeight) {
+        ImageView imageView = new ImageView(new Image(getClass().getResourceAsStream("icons/" + icon)));
+        imageView.setFitHeight(fitHeight);
+        imageView.setPreserveRatio(true);
+        node.setGraphic(imageView);
     }
-
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        stage = primaryStage;
-
         Parent root = FXMLLoader.load(getClass().getResource("layout.fxml"));
-        stage.setTitle("MPlayer");
-        stage.setResizable(false);
-        stage.setScene(new Scene(root, 950, 450));
-        stage.show();
+        primaryStage.setTitle("MPlayer");
+        primaryStage.setResizable(false);
+        primaryStage.setScene(new Scene(root, 950, 450));
+        primaryStage.show();
     }
 
     public static void main(String[] args) {
