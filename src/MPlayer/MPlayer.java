@@ -113,6 +113,11 @@ public class MPlayer extends Application {
             mediaPlayer = null;
             index = -1;
             mediaDelete.setSelected(false);
+            artist.setText("artist");
+            time.setText("mm:ss");
+            songTitle.setText("title");
+            sliderDuration.setValue(0);
+            this.setImageOnButton(play, "play.png", 35);
         });
 
         mediaSelect.setOnAction(actionEvent -> {
